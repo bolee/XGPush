@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name						= "QQ_XGPush"
-  spec.version					= "3.2.2"
+  spec.version					= "3.3.3-beta"
   spec.summary					= "腾讯信鸽（XG Push）"
   spec.homepage					= "http://xg.qq.com"
   spec.authors					= "tencent TEG"

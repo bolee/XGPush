@@ -10,8 +10,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@class CLLocation;
-
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 #import <UserNotifications/UserNotifications.h>
 #endif
@@ -152,7 +150,7 @@ typedef NS_OPTIONS(NSUInteger, XGUserNotificationTypes) {
  */
 + (nullable instancetype)configureNotificationWithCategories:(nullable NSSet<XGNotificationCategory *> *)categories types:(XGUserNotificationTypes)types;
 
-- (nonnull instancetype)init NS_UNAVAILABLE;
+
 /**
  @brief 返回消息通知栏配置对象
  */
@@ -169,13 +167,15 @@ typedef NS_OPTIONS(NSUInteger, XGUserNotificationTypes) {
  */
 @property (readonly, nonatomic) XGUserNotificationTypes defaultTypes;
 
+- (nullable instancetype)init NS_UNAVAILABLE;
+
 @end
 
 
 /**
  @brief 设备token绑定的类型，绑定指定类型之后，就可以在信鸽前端按照指定的类型进行指定范围的推送
 
- - XGPushTokenBindTypeNone: 当前设备token不绑定任何类型，可以使用token单推，或者是全量推送（3.2.0+ 不推荐使用 ）
+ - XGPushTokenBindTypeNone: 当前设备token不绑定任何类型，可以使用token单推，或者是全量推送
  - XGPushTokenBindTypeAccount: 当前设备token与账号绑定之后，可以使用账号推送
  - XGPushTokenBindTypeTag: 当前设备token与指定标签绑定之后，可以使用标签推送
  */
@@ -199,52 +199,17 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
  @param type token对象绑定的类型
  @param error token对象绑定的结果信息
  */
-- (void)xgPushDidBindWithIdentifier:(nonnull NSString *)identifier type:(XGPushTokenBindType)type error:(nullable NSError *)error;
+- (void)xgPushDidBindWithIdentifier:(nullable NSString *)identifier type:(XGPushTokenBindType)type error:(nullable NSError *)error;
+
 
 /**
  @brief 监控token对象解绑的情况
- 
- @param identifier token对象解绑的标识
- @param type token对象解绑的类型
- @param error token对象解绑的结果信息
- */
-- (void)xgPushDidUnbindWithIdentifier:(nonnull NSString *)identifier type:(XGPushTokenBindType)type error:(nullable NSError *)error;
 
-/**
- @brief 监控token对象identifiers绑定的情况
- 
- @param identifiers token对象绑定的标识
+ @param identifier token对象绑定的标识
  @param type token对象绑定的类型
  @param error token对象绑定的结果信息
  */
-- (void)xgPushDidBindWithIdentifiers:(nonnull NSArray <NSString *> *)identifiers type:(XGPushTokenBindType)type error:(nullable NSError *)error;
-
-/**
- @brief 监控token对象identifiers解绑的情况
- 
- @param identifiers token对象解绑的标识
- @param type token对象解绑的类型
- @param error token对象解绑的结果信息
- */
-- (void)xgPushDidUnbindWithIdentifiers:(nonnull NSArray <NSString *> *)identifiers type:(XGPushTokenBindType)type error:(nullable NSError *)error;
-
-/**
- @brief 监控token对象更新已绑定标识的情况
-
- @param identifiers token对象更新后的标识
- @param type token对象更新类型
- @param error token对象更新标识的结果信息
- */
-- (void)xgPushDidUpdatedBindedIdentifiers:(nonnull NSArray <NSString *> *)identifiers bindType:(XGPushTokenBindType)type error:(nullable NSError *)error;
-
-
-/**
- @brief 监控清除token对象绑定标识的情况
-
- @param type token对象清除的类型
- @param error token对象清除标识的结果信息
- */
-- (void)xgPushDidClearAllIdentifiers:(XGPushTokenBindType)type error:(nullable NSError *)error;
+- (void)xgPushDidUnbindWithIdentifier:(nullable NSString *)identifier type:(XGPushTokenBindType)type error:(nullable NSError *)error;
 
 
 @end
@@ -260,10 +225,19 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 + (nonnull instancetype)defaultTokenManager;
 
 - (nonnull instancetype)init NS_UNAVAILABLE;
+
+/**
+ @brief 将接收到的设备token注册给token管理对象
+
+ @param deviceToken 设备的token，这个参数来来源于Application delegate 的didRegisterForRemoteNotificationsWithDeviceToken:方法中
+ @note 此方法是必须在上述回调中调用，否则将导致信鸽服务无法推送消息到指定的设备, 3.0中此方法可以不需要手动在didRegisterForRemoteNotificationsWithDeviceToken调用，SDK内部处理
+ */
+- (void)registerDeviceToken:(nonnull NSData *)deviceToken;
+
 /**
  @brief 设备token管理操作的代理对象
  */
-@property (weak, nonatomic, nullable) id<XGPushTokenManagerDelegate> delegate;
+@property (weak, nonatomic, nullable) id<XGPushTokenManagerDelegate> delegatge;
 
 /**
  @brief 返回当前设备token的字符串
@@ -275,17 +249,17 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 
  @param identifier 指定绑定标识
  @param type 指定绑定类型
+ @note  对于账号类型的绑定，信鸽服务只会绑定最新账号，重复设置账号会导致之前的账号失效
  */
-- (void)bindWithIdentifier:(nonnull NSString *)identifier type:(XGPushTokenBindType)type;
+- (void)bindWithIdentifier:(nullable NSString *)identifier type:(XGPushTokenBindType)type;
 
 /**
- @brief 根据类型和标识为token对象解绑
+ @brief 为token对象解除绑定类型和标识
 
- @param identifier 指定解绑标识
- @param type 指定解绑类型
- @note 若需要解绑全部标签，建议使用 removeAllTags: 接口
+ @param identifier 指定绑定标识
+ @param type 指定绑定类型
  */
-- (void)unbindWithIdentifer:(nonnull NSString *)identifier type:(XGPushTokenBindType)type;
+- (void)unbindWithIdentifer:(nullable NSString *)identifier type:(XGPushTokenBindType)type;
 
 /**
  @brief 根据指定类型查询当前token对象绑定的标识
@@ -294,41 +268,6 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
  @return 当前token对象绑定的标识
  */
 - (nullable NSArray<NSString *> *)identifiersWithType:(XGPushTokenBindType)type;
-
-/**
- @brief 为token对象设置绑定类型和标识
- 
- @param identifiers 指定绑定标识，标签字符串不允许有空格或者是tab字符
- @param type 指定绑定类型
- @note  暂不支持账号类型
- */
-- (void)bindWithIdentifiers:(nonnull NSArray <NSString *> *)identifiers type:(XGPushTokenBindType)type;
-
-/**
- @brief 根据类型和标识为token对象解绑
- 
- @param identifiers 指定解绑标识，标签字符串不允许有空格或者是tab字符
- @param type 指定解绑类型
- @note 暂不支持账号类型，标签字符串不允许有空格或者是tab字符
- */
-- (void)unbindWithIdentifers:(nonnull NSArray <NSString *> *)identifiers type:(XGPushTokenBindType)type;
-
-/**
- @brief 根据类型，覆盖原有的标识；若之前没有绑定标识，则会执行新增标识
- 
- @param identifiers 标签标识字符串数组，标签字符串不允许有空格或者是tab字符
- @param type 标识类型
- @note 若指定为标签类型，此接口会将当前 Token 对应的旧有的标签全部替换为当前的标签；若指定账号类型，此接口仅取 identifiers 列表中第一个
- */
-- (void)updateBindedIdentifiers:(nonnull NSArray <NSString *> *)identifiers bindType:(XGPushTokenBindType)type;
-
-/**
- @brief 根据标识类型，清除所有标识
-
- @param type 标识类型
- */
-- (void)clearAllIdentifiers:(XGPushTokenBindType)type;
-
 
 @end
 
@@ -340,12 +279,9 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 
 @optional
 
-- (void)xgPushDidReceiveRemoteNotification:(nonnull id)notification withCompletionHandler:(nullable void (^)(NSUInteger))completionHandler;
-
-
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 /**
-  @brief 处理iOS 10 UNUserNotification.framework的对应的方法
+ 处理iOS 10 UNUserNotification.framework的对应的方法
 
  @param center [UNUserNotificationCenter currentNotificationCenter]
  @param notification 通知对象
@@ -353,8 +289,9 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
  */
 - (void)xgPushUserNotificationCenter:(nonnull UNUserNotificationCenter *)center willPresentNotification:(nullable UNNotification *)notification withCompletionHandler:(nonnull void (^)(UNNotificationPresentationOptions options))completionHandler __IOS_AVAILABLE(10.0);
 
+
 /**
-  @brief 处理iOS 10 UNUserNotification.framework的对应的方法
+ 处理iOS 10 UNUserNotification.framework的对应的方法
 
  @param center [UNUserNotificationCenter currentNotificationCenter]
  @param response 用户对通知消息的响应对象
@@ -389,24 +326,8 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
  */
 - (void)xgPushDidReportNotification:(BOOL)isSuccess error:(nullable NSError *)error;
 
-
-/**
- @brief 监控设置信鸽服务器下发角标的情况
-
- @param isSuccess isSuccess 上报是否成功
- @param error 设置失败的信息
- */
-- (void)xgPushDidSetBadge:(BOOL)isSuccess error:(nullable NSError *)error;
-
-/**
- @brief 注册设备token的回调
- 
- @param deviceToken 当前设备的token
- @param error 错误信息
- */
-- (void)xgPushDidRegisteredDeviceToken:(nullable NSString *)deviceToken error:(nullable NSError *)error;
-
 @end
+
 
 /**
  @brief 管理信鸽推送服务的对象，负责注册推送权限、消息的管理、调试模式的开关设置等
@@ -414,6 +335,7 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 @interface XGPush : NSObject
 
 #pragma mark - 初始化相关
+
 
 /**
  @brief 获取信鸽推送管理的单例对象
@@ -474,32 +396,6 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 - (void)reportXGNotificationInfo:(nonnull NSDictionary *)info;
 
 /**
- @brief 上报地理位置信息
-
- @param latitude 纬度
- @param longitude 经度
- */
-- (void)reportLocationWithLatitude:(double)latitude longitude:(double)longitude;
-
-/**
- @brief 上报当前App角标数到信鸽服务器
-
- @param badgeNumber 应用的角标数
- @note 此接口是为了实现角标+1的功能，服务器会在这个数值基础上进行角标数新增的操作，调用成功之后，会覆盖之前值
- */
-- (void)setBadge:(NSInteger)badgeNumber;
-
-/**
- @brief 上报推送消息的用户行为
-
- @param identifier 用户行为标识
- @note 此接口即统计推送消息中开发者预先设置或者是系统预置的行为标识，可以了解到用户是如何处理推送消息的，又统计消息的点击次数
- */
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-- (void)reportXGNotificationResponse:(nullable UNNotificationResponse *)response __IOS_AVAILABLE(10.0);
-#endif
-
-/**
  @brief 查询设备通知权限是否被用户允许
 
  @param handler 查询结果的返回方法
@@ -508,11 +404,10 @@ typedef NS_ENUM(NSUInteger, XGPushTokenBindType) {
 - (void)deviceNotificationIsAllowed:(nonnull void (^)(BOOL isAllowed))handler;
 
 /**
- @brief 查看SDK的版本
+ 查看SDK的版本
 
  @return sdk版本号
  */
 - (nonnull NSString *)sdkVersion;
 
 @end
-			

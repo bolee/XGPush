@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-  spec.name						= "Lee_QQ_XGPush"
+  spec.name						= "QQ_XGPush"
   spec.version					= "4.0"
   spec.summary					= "腾讯信鸽（XG Push）"
   spec.homepage					= "http://xg.qq.com"
